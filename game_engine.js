@@ -61,6 +61,7 @@ function Size() {
 
 Size.prototype.set = function(width, height) { this.width = width; this.height = height; }
 
+/***************************************************************************/
 function Renderable() {
   this.points = [];
   this.position = new Position();
@@ -111,7 +112,7 @@ Lines.prototype.addLine = function(point1, point2) {
   this.points.push(point1, point2);
 }
 
-/**********************/
+/***************************************************************************************************/
 function World() {
   this.objects = [];
   this.camera = null;
@@ -153,10 +154,9 @@ World.prototype.renderObject = function(object, canvas) {
   }));
 
   object.render(canvas.getContext("2d"));
-
 }
 
-/********************/
+/********************************************/
 function Camera() {
   this.position = new Position();
   this.size = new Size();
@@ -174,6 +174,7 @@ Camera.prototype.convertScreenToWorldCoordinate = function(x,y) {
   return new Position(x, y);
 }
 
+/********************************************/
 function GameEngine(canvas_id, init_callback, game_loop_callback) {
   var that = this;
   this.canvas = document.getElementById(canvas_id);
