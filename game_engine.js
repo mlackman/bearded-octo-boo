@@ -211,4 +211,35 @@ function GameEngine(canvas_id, init_callback, game_loop_callback) {
   });
 }
 
+GameEngine.prototype.enable_mouse = function() {
+  this.mouse = new Mouse(this);
+}
+
+/************************************/
+function GameMouseEvent(x, y, pressed) {
+  this.x = x;
+  this.y = y;
+  this.pressed = pressed;
+}
+
+/************************************/
+function Mouse(game) {
+  this.events = [];
+  var that = this;
+  this.pressed = false;
+  canvas = game.canvas;
+  canvas.addEventListener("mousemove", function(event) {
+    var x = event.clientX;
+    var y = event.clientY;
+    var pos = game.camera.convertScreenToWorldCoordinate(x, y);
+    that.events.push(new GameMouseEvent(pos.x, pos.y, that.pressed));
+  });
+  canvas.addEventListener("mousedown", function() { that.pressed = true; });
+  canvas.addEventListener("mouseup", function() { that.pressed = false; });
+}
+
+Mouse.prototype.get_event = function() {
+  return this.events.shift();
+}
+
 
