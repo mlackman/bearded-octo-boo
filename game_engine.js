@@ -29,7 +29,7 @@ PositionAnimator.prototype.execute = function(time) {
       dt = 1.0;
       this.running = false;
     }
-    var value = -dt * (dt-2.0);
+    var value = -dt * (dt-2.0); // Easing function, this should be provided
     var x = this.original_position.x + this.deltaX * value;
     var y = this.original_position.y + this.deltaY * value;
     this.object.position.set(x,y);
@@ -66,11 +66,17 @@ function Renderable() {
   this.points = [];
   this.position = new Position();
   this.screenPoints = [];
+  this.scaleValue = 1.0;
 }
 
 Renderable.prototype.getWorldPoints = function() {
   var that = this;
-  return this.points.map(function(point) { return [point[0] + that.position.x, point[1] + that.position.y]; });
+  return this.points.map(function(point) { return [point[0] * that.scaleValue + that.position.x,
+    point[1] * that.scaleValue + that.position.y]; });
+}
+
+Renderable.prototype.scale = function(scaleValue) {
+  this.scaleValue = scaleValue;
 }
 
 Renderable.prototype.setScreenPoints = function(screenPoints) {
@@ -96,8 +102,7 @@ Renderable.prototype.render = function(context) {
 /****************************************************************************************************/
 function Triangle() {
   Renderable.call(this);
-  points = [[0.0, 1.0], [1.0, -1.0], [-1.0, -1.0], [0.0, 1.0]];
-  this.points = points.map(function(point) { return [point[0] * 20.0, point[1] * 20.0]; });
+  this.points = [[0.0, 1.0], [1.0, -1.0], [-1.0, -1.0], [0.0, 1.0]];
 }
 inherit(Triangle, Renderable);
 
