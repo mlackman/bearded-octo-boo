@@ -8,16 +8,22 @@ function ConstantVelocityPositionAnimator(velocity, target_position, object) {
   var distance = object.position.distance_to(target_position);
   this.position_animator = new PositionAnimator(distance/velocity, target_position, object);
 }
-ConstantVelocityPositionAnimator.prototype.execute = function(time) { this.position_animator.execute(time); }
+ConstantVelocityPositionAnimator.prototype.execute = function(time) {
+  this.position_animator.execute(time);
+}
 
-function PositionAnimator(duration, target_position, object) {
+function PositionAnimator(duration, target_position_or_path, object) {
+  if (target_position_or_path instanceof Path) {
+    this.path = target_position_or_path;
+  } else {
+    this.path = new Path([object.position.point(), target_position_or_path.point()]);
+  }
   this.duration = duration;
-  this.original_position = object.position.clone();
-  this.deltaX = target_position.x - object.position.x;
-  this.deltaY = target_position.y - object.position.y;
+  this.distance_to_travel = this.path.distance();
   this.start_time = null;
   this.object = object;
   this.running = true;
+  console.log(this);
 }
 
 PositionAnimator.prototype.execute = function(time) {
@@ -29,10 +35,10 @@ PositionAnimator.prototype.execute = function(time) {
       dt = 1.0;
       this.running = false;
     }
-    var value = -dt * (dt-2.0); // Easing function, this should be provided
-    var x = this.original_position.x + this.deltaX * value;
-    var y = this.original_position.y + this.deltaY * value;
-    this.object.position.set(x,y);
+    var value = dt;
+    var current_distance = this.distance_to_travel * value;
+    var point = this.path.point_at(current_distance);
+    this.object.position.set(point[0], point[1]);
   }
 }
 
@@ -52,6 +58,10 @@ Position.prototype.distance_to = function(position) {
   var dx = this.x - position.x;
   var dy = this.y - position.y;
   return Math.sqrt(dx*dx+dy*dy);
+}
+
+Position.prototype.point = function() {
+  return [this.x, this.y];
 }
 
 function Size() {
@@ -246,5 +256,58 @@ function Mouse(game) {
 Mouse.prototype.get_event = function() {
   return this.events.shift();
 }
+
+/***************************************/
+function Path(points) {
+  this.points = points;
+  this.line_segments = [];
+  this.total_distance = 0;
+  this.start_position = new Position(points[0][0], points[0][1]);
+  for (var i = 0; i < points.length-1; i++) {
+    var ls = new LineSegment(points[i], points[i+1]);
+    this.line_segments.push(ls);
+    this.total_distance = this.total_distance + ls.length;
+  }
+}
+
+Path.prototype.point_at = function(distance) {
+  var ls = null;
+  var d = distance;
+  for(var i = 0; i < this.line_segments.length; i++) {
+    ls = this.line_segments[i];
+    d = d - ls.length;
+    if (d <= 0) {
+      d = d + ls.length;
+      break;
+    }
+  }
+  return ls.point_at(d);
+}
+
+Path.prototype.distance = function() {
+  return this.total_distance;
+}
+
+/***************************************/
+function LineSegment(startPoint, endPoint) {
+  this.startPoint = startPoint;
+  this.endPoint = endPoint;
+  var x = startPoint[0];
+  var y = startPoint[1];
+  var x1 = endPoint[0];
+  var y1 = endPoint[1];
+  var dx = x - x1;
+  var dy = y - y1;
+  this.length = Math.sqrt(dx*dx + dy*dy);
+  this.unit_dx = dx/this.length;
+  this.unit_dy = dy/this.length;
+}
+
+LineSegment.prototype.point_at = function(distance) {
+  var x = this.unit_dx * distance;
+  var y = this.unit_dy * distance;
+  return [this.startPoint[0]-x, this.startPoint[1]-y];
+}
+
 
 
