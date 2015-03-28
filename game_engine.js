@@ -77,6 +77,9 @@ function Renderable() {
   this.position = new Position();
   this.screenPoints = [];
   this.scaleValue = 1.0;
+  this.flags = function() {
+    this.open = false;
+  }
 }
 
 Renderable.prototype.getWorldPoints = function() {
@@ -101,7 +104,10 @@ Renderable.prototype.render = function(context) {
     context.beginPath();
     var point = points[0];
     context.moveTo(point[0], point[1]);
-    for(var i = 1; i < points.length; i++) {
+	var len = points.length;
+	if ( this.flags.open )
+		len -= 1;
+    for(var i = 1; i < len; i++) {
       point = points[i];
       context.lineTo(point[0], point[1]);
     }
