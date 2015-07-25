@@ -23,7 +23,6 @@ function PositionAnimator(duration, target_position_or_path, object) {
   this.start_time = null;
   this.object = object;
   this.running = true;
-  console.log(this);
 }
 
 PositionAnimator.prototype.execute = function(time) {
@@ -183,7 +182,6 @@ function Camera() {
   this.size = new Size();
 }
 
-
 Camera.prototype.convertScreenToWorldCoordinate = function(x,y) {
   var center_x = this.size.width / 2.0;
   var center_y = this.size.height / 2.0;
@@ -213,17 +211,23 @@ function GameEngine(canvas_id, init_callback, game_loop_callback) {
     that.world.setCamera(that.camera);
     init_callback(that);
 
+    var physicsInterval = 15.0; // ms
     var fps = 0.0;
     var prevTimestamp = 0;
+    var physicsTime = 0;
     var game_loop_func = function(timestamp) {
-      game_loop_callback(that, timestamp);
-      that.ctx.clearRect(0, 0, that.canvas.width, that.canvas.height);
 
+      // Number of physics updates
+      for(; physicsTime <= timestamp; physicsTime += physicsInterval) {
+        game_loop_callback(that, physicsTime);
+        that.animators.forEach(function(a) { a.execute(physicsTime); });
+      }
+
+      that.ctx.clearRect(0, 0, that.canvas.width, that.canvas.height);
       fps = Math.round(1000.0 / (timestamp - prevTimestamp));
       that.ctx.fillText(fps, 10, 10);
-
-      that.animators.forEach(function(a) { a.execute(timestamp); });
       that.world.render(that.canvas);
+
       window.requestAnimationFrame(game_loop_func);
 
       prevTimestamp = timestamp;
